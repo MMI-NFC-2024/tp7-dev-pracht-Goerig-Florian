@@ -1,0 +1,41 @@
+---
+import * as Plot from "@observablehq/plot";
+import PlotFigure from "../components/PlotFigure.astro";
+import departements from "../assets/departements.geojson.json";
+import populationMain from "../assets/populationMain.json";
+
+// version simplifiée : on garde seulement la population
+const optionPlot = {
+  projection: {
+    type: "mercator",
+    domain: departements,
+  },
+  color: {
+    type: "quantile",
+    n: 8,
+    scheme: "Greens",
+    label: "Population (habitants)",
+    legend: true,
+  },
+  marks: [
+    Plot.geo(departements, {
+      fill: (d) => {
+        const deptName = d.properties.nom;
+        const popData = populationMain.find((p) => p.Géographie === deptName);
+        return popData ? popData.Valeur : 0;
+      },
+      stroke: "#999",
+      title: (d) => {
+        const deptName = d.properties.nom;
+        const popData = populationMain.find((p) => p.Géographie === deptName);
+        return `${deptName} : ${popData ? popData.Valeur : "n/a"}`;
+      },
+      tip: true,
+    }),
+  ],
+};
+---
+
+<h1 class="text-2xl font-bold mb-4">Carte de la population par département</h1>
+
+<PlotFigure options={optionPlot} />

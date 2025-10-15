@@ -1,0 +1,108 @@
+---
+import * as Plot from "@observablehq/plot";
+import PlotFigure from "../components/PlotFigure.astro";
+import departements from "../assets/departements.geojson.json";
+import populationMain from "../assets/populationMain.json";
+
+// Extraire les valeurs uniques pour chaque filtre
+const listePeriode = [
+  ...new Set(populationMain.map((d) => d.Période)),
+].reverse();
+const listeSexe = [...new Set(populationMain.map((d) => d.Sexe))];
+const listeAge = [...new Set(populationMain.map((d) => d["Âge"]))];
+---
+
+<h1 class="text-2xl font-bold mb-4">Population par département</h1>
+
+<div class="flex gap-4 mb-6">
+  <select id="periode" class="border px-2 py-1 rounded">
+    {listePeriode.map((p, i) => <option selected={i === 0}>{p}</option>)}
+  </select>
+
+  <select id="sexe" class="border px-2 py-1 rounded">
+    {listeSexe.map((s, i) => <option selected={i === 0}>{s}</option>)}
+  </select>
+
+  <select id="age" class="border px-2 py-1 rounded">
+    {listeAge.map((a, i) => <option selected={i === 0}>{a}</option>)}
+  </select>
+</div>
+
+<div id="graphique"></div>
+
+<script type="module">
+  import * as Plot from "@observablehq/plot";
+  import departements from "../assets/departements.geojson.json";
+  import populationMain from "../assets/populationMain.json";
+
+  const elGraph = document.getElementById("graphique");
+  const elmYear = document.getElementById("periode");
+  const elmSex = document.getElementById("sexe");
+  const elmAge = document.getElementById("age");
+
+  let selectedYear = Number(elmYear.value);
+  let selectedSex = elmSex.value;
+  let selectedAge = elmAge.value;
+
+  function dessinerCarte() {
+    const optionPlot = {
+      projection: { type: "mercator", domain: departements },
+      color: {
+        type: "quantile",
+        n: 8,
+        scheme: "Greens",
+        label: "Population",
+        legend: true,
+        transform: (d) => Math.round(d / 100000),
+      },
+      marks: [
+        Plot.geo(departements, {
+          fill: (d) => {
+            const deptName = d.properties.nom;
+            const popData = populationMain.find(
+              (p) =>
+                p.Géographie === deptName &&
+                p.Période === selectedYear &&
+                p.Sexe === selectedSex &&
+                p["Âge"] === selectedAge
+            );
+            return popData ? popData.Valeur : 0;
+          },
+          stroke: "#999",
+          title: (d) => {
+            const deptName = d.properties.nom;
+            const popData = populationMain.find(
+              (p) =>
+                p.Géographie === deptName &&
+                p.Période === selectedYear &&
+                p.Sexe === selectedSex &&
+                p["Âge"] === selectedAge
+            );
+            return `${deptName} : ${popData ? popData.Valeur : "n/a"}`;
+          },
+          tip: true,
+        }),
+      ],
+    };
+
+    elGraph.innerHTML = "";
+    elGraph.appendChild(Plot.plot(optionPlot));
+  }
+
+  dessinerCarte();
+
+  elmYear.addEventListener("change", () => {
+    selectedYear = Number(elmYear.value);
+    dessinerCarte();
+  });
+
+  elmSex.addEventListener("change", () => {
+    selectedSex = elmSex.value;
+    dessinerCarte();
+  });
+
+  elmAge.addEventListener("change", () => {
+    selectedAge = elmAge.value;
+    dessinerCarte();
+  });
+</script>
