@@ -9,22 +9,56 @@ const { title = "TP7 - Données géographiques" } = Astro.props;
     <title>{title}</title>
   </head>
   <body class="min-h-screen flex flex-col bg-gray-50 text-gray-800">
-    <header class="bg-green-700 text-white">
-      <nav class="max-w-5xl mx-auto px-4 py-3 flex gap-3 text-sm">
-        <a href="/" class="hover:underline">Accueil</a>
-        <a href="/leaflet/" class="hover:underline">Carte Leaflet</a>
-        <a href="/geojson-dynamique/" class="hover:underline"
-          >GeoJSON (filtres)</a
-        >
+    <!-- Barre de navigation -->
+    <header class="bg-green-700 text-white shadow-md">
+      <nav
+        class="max-w-5xl mx-auto flex justify-between items-center px-6 py-3"
+      >
+        <h1 class="font-bold text-lg">🌍 TP7 Visualisation</h1>
+        <ul class="flex gap-4 text-sm">
+          <li>
+            <a
+              href="/"
+              class="px-3 py-1.5 rounded-md hover:bg-green-600 transition-colors"
+              aria-current={Astro.url.pathname === "/" ? "page" : undefined}
+            >
+              Accueil
+            </a>
+          </li>
+          <li>
+            <a
+              href="/leaflet/"
+              class="px-3 py-1.5 rounded-md hover:bg-green-600 transition-colors"
+              aria-current={Astro.url.pathname.startsWith("/leaflet")
+                ? "page"
+                : undefined}
+            >
+               Carte Leaflet
+            </a>
+          </li>
+          <li>
+            <a
+              href="/geojson-dynamique/"
+              class="px-3 py-1.5 rounded-md hover:bg-green-600 transition-colors"
+              aria-current={Astro.url.pathname.startsWith("/geojson-dynamique")
+                ? "page"
+                : undefined}
+            >
+               Données GeoJSON
+            </a>
+          </li>
+        </ul>
       </nav>
     </header>
 
-    <main class="flex-1 max-w-5xl mx-auto px-4 py-6">
+    <!-- Contenu principal -->
+    <main class="flex-1 max-w-5xl mx-auto px-6 py-8">
       <slot />
     </main>
 
-    <footer class="bg-green-700 text-white text-center py-3 text-xs">
-      TP7 Visualisation de données
+    <!-- Pied de page -->
+    <footer class="bg-green-700 text-white text-center py-4 text-sm mt-auto">
+      Projet MMI - Visualisation de données (TP7)
     </footer>
   </body>
 </html>
