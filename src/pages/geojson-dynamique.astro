@@ -4,54 +4,118 @@ import PlotFigure from "../components/PlotFigure.astro";
 import departements from "../assets/departements.geojson.json";
 import populationMain from "../assets/populationMain.json";
 
-// Extraire les valeurs uniques pour chaque filtre
+let selectedYear = 2015;
+let selectedSex = "Total";
+let selectedAge = "Total";
+
 const listePeriode = [
   ...new Set(populationMain.map((d) => d.Période)),
 ].reverse();
 const listeSexe = [...new Set(populationMain.map((d) => d.Sexe))];
 const listeAge = [...new Set(populationMain.map((d) => d["Âge"]))];
+
+const optionPlot = {
+  projection: { type: "mercator", domain: departements },
+  color: {
+    type: "quantile",
+    n: 8,
+    scheme: "Greens",
+    label: "Population en centaine de milliers",
+    legend: true,
+    transform: (d) => Math.round(d / 100000),
+  },
+  marks: [
+    Plot.geo(departements, {
+      fill: (d) => {
+        const deptName = d.properties.nom;
+        const popData = populationMain.find(
+          (p) =>
+            p.Géographie === deptName &&
+            p.Période === selectedYear &&
+            p.Sexe === selectedSex &&
+            p["Âge"] === selectedAge
+        );
+        return popData ? popData.Valeur : null;
+      },
+      stroke: "#999",
+      title: (d) => {
+        const deptName = d.properties.nom;
+        const popData = populationMain.find(
+          (p) =>
+            p.Géographie === deptName &&
+            p.Période === selectedYear &&
+            p.Sexe === selectedSex &&
+            p["Âge"] === selectedAge
+        );
+        return popData
+          ? `${deptName} : ${popData.Valeur}`
+          : `${deptName} : n/a`;
+      },
+      tip: true,
+    }),
+  ],
+};
 ---
 
 <h1 class="text-2xl font-bold mb-4">Population par département</h1>
 
-<div class="flex gap-4 mb-6">
+<!-- Rendu initial côté serveur -->
+<PlotFigure options={optionPlot} />
+
+<!-- Sélecteurs côté serveur (listes pré-calculées) -->
+<div class="flex gap-3 my-4">
   <select id="periode" class="border px-2 py-1 rounded">
-    {listePeriode.map((p, i) => <option selected={i === 0}>{p}</option>)}
+    {
+      listePeriode.map((p, i) => (
+        <option value={p} selected={i === 0}>
+          {p}
+        </option>
+      ))
+    }
   </select>
 
   <select id="sexe" class="border px-2 py-1 rounded">
-    {listeSexe.map((s, i) => <option selected={i === 0}>{s}</option>)}
+    {
+      listeSexe.map((s, i) => (
+        <option value={s} selected={i === 0}>
+          {s}
+        </option>
+      ))
+    }
   </select>
 
   <select id="age" class="border px-2 py-1 rounded">
-    {listeAge.map((a, i) => <option selected={i === 0}>{a}</option>)}
+    {
+      listeAge.map((a, i) => (
+        <option value={a} selected={i === 0}>
+          {a}
+        </option>
+      ))
+    }
   </select>
 </div>
 
-<div id="graphique"></div>
-
-<script type="module">
+<script>
   import * as Plot from "@observablehq/plot";
   import departements from "../assets/departements.geojson.json";
   import populationMain from "../assets/populationMain.json";
 
-  const elGraph = document.getElementById("graphique");
   const elmYear = document.getElementById("periode");
   const elmSex = document.getElementById("sexe");
   const elmAge = document.getElementById("age");
 
-  let selectedYear = Number(elmYear.value);
-  let selectedSex = elmSex.value;
-  let selectedAge = elmAge.value;
+  function updatePlot() {
+    const selectedYear = Number(elmYear.value);
+    const selectedSex = elmSex.value;
+    const selectedAge = elmAge.value;
 
-  function dessinerCarte() {
     const optionPlot = {
       projection: { type: "mercator", domain: departements },
       color: {
         type: "quantile",
         n: 8,
         scheme: "Greens",
-        label: "Population",
+        label: "Population en centaine de milliers",
         legend: true,
         transform: (d) => Math.round(d / 100000),
       },
@@ -66,7 +130,7 @@ const listeAge = [...new Set(populationMain.map((d) => d["Âge"]))];
                 p.Sexe === selectedSex &&
                 p["Âge"] === selectedAge
             );
-            return popData ? popData.Valeur : 0;
+            return popData ? popData.Valeur : null;
           },
           stroke: "#999",
           title: (d) => {
@@ -78,31 +142,23 @@ const listeAge = [...new Set(populationMain.map((d) => d["Âge"]))];
                 p.Sexe === selectedSex &&
                 p["Âge"] === selectedAge
             );
-            return `${deptName} : ${popData ? popData.Valeur : "n/a"}`;
+            return popData
+              ? `${deptName} : ${popData.Valeur}`
+              : `${deptName} : n/a`;
           },
           tip: true,
         }),
       ],
     };
 
-    elGraph.innerHTML = "";
-    elGraph.appendChild(Plot.plot(optionPlot));
+    const figure = document.querySelector("figure");
+    if (figure) {
+      figure.innerHTML = "";
+      figure.appendChild(Plot.plot(optionPlot));
+    }
   }
 
-  dessinerCarte();
-
-  elmYear.addEventListener("change", () => {
-    selectedYear = Number(elmYear.value);
-    dessinerCarte();
-  });
-
-  elmSex.addEventListener("change", () => {
-    selectedSex = elmSex.value;
-    dessinerCarte();
-  });
-
-  elmAge.addEventListener("change", () => {
-    selectedAge = elmAge.value;
-    dessinerCarte();
-  });
+  elmYear.addEventListener("change", updatePlot);
+  elmSex.addEventListener("change", updatePlot);
+  elmAge.addEventListener("change", updatePlot);
 </script>
