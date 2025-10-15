@@ -1,21 +1,46 @@
 ---
-import PlotFigure from "../components/PlotFigure.astro";
 import Layout from "../layouts/Layout.astro";
+import PlotFigure from "../components/PlotFigure.astro";
 import * as Plot from "@observablehq/plot";
 import penguins from "../assets/penguins.json";
+
+const scatterOptions = {
+  marginLeft: 48,
+  marginBottom: 48,
+  grid: true,
+  x: { label: "Longueur du bec (mm)" },
+  y: { label: "Profondeur du bec (mm)" },
+  color: { legend: true },
+  marks: [
+    Plot.dot(
+      penguins.filter((d) => d.culmen_length_mm && d.culmen_depth_mm),
+      {
+        x: "culmen_length_mm",
+        y: "culmen_depth_mm",
+        stroke: "species",
+        r: 3,
+        tip: true,
+      }
+    ),
+  ],
+};
 ---
 
-<Layout>
-  <h1 class="text-2xl">Test Astro et Plot (Observablehq)</h1>
+<Layout title="TP7 — Accessibilité des graphiques">
+  <h1 class="text-3xl font-bold mb-4">Accessibilité (a11y) des graphiques</h1>
+
+  <p class="mb-3">
+    Exemple de graphique <strong>Observable Plot</strong> enrichi avec des métadonnées
+    d’accessibilité :
+  </p>
+
   <PlotFigure
-    options={{
-      marks: [
-        Plot.dot(penguins, {
-          x: "culmen_length_mm",
-          y: "culmen_depth_mm",
-          stroke: "species",
-        }),
-      ],
-    }}
+    options={scatterOptions}
+    title="Relation entre longueur et profondeur du bec"
+    subtitle="Données du jeu Palmer Penguins"
+    caption="Figure 1. Chaque point représente un pingouin ; la couleur indique l’espèce."
+    ariaLabel="Graphique de dispersion montrant la relation entre la longueur et la profondeur du bec chez les pingouins."
+    wrapFigure={true}
+    figcaption="Visualisation accessible de la relation entre longueur et profondeur du bec des pingouins selon leur espèce."
   />
 </Layout>

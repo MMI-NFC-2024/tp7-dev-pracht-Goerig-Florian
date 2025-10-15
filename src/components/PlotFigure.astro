@@ -1,9 +1,50 @@
 ---
 import * as Plot from "@observablehq/plot";
 import { JSDOM } from "jsdom";
-const { options } = Astro.props;
 
-const plot = Plot.plot({ ...options, document: new JSDOM("").window.document });
+// Props disponibles :
+const {
+  options = {},
+  title,
+  subtitle,
+  caption,
+  ariaLabel,
+  wrapFigure = false, // affiche <figure>/<figcaption>
+  figcaption = "",
+} = Astro.props;
+
+const doc = new JSDOM("").window.document;
+
+const plot = Plot.plot({
+  ...options,
+  title,
+  subtitle,
+  caption,
+  ariaLabel,
+  document: doc,
+});
 ---
 
-<div set:html={plot.outerHTML} />
+{
+  wrapFigure ? (
+    <figure
+      class="bg-white rounded-xl border border-gray-200 p-3 shadow-sm"
+      role="figure"
+      aria-labelledby={ariaLabel ? undefined : "chart-title"}
+    >
+      <div set:html={plot.outerHTML} role="img" aria-label={ariaLabel} />
+      {figcaption && (
+        <figcaption id="chart-title" class="mt-2 text-sm text-gray-600">
+          {figcaption}
+        </figcaption>
+      )}
+    </figure>
+  ) : (
+    <div
+      class="bg-white rounded-xl border border-gray-200 p-3 shadow-sm"
+      set:html={plot.outerHTML}
+      role="img"
+      aria-label={ariaLabel}
+    />
+  )
+}
